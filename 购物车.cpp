@@ -9,7 +9,7 @@
 #include "stdafx.h"
 //宏定义
 #define COUNT sizeof(Goods)
-# define LEN sizeof(struct Goods)
+#define LEN sizeof(struct Goods)
 int num;
 
 struct Goods
@@ -27,7 +27,7 @@ void InitFace();
 struct Goods *GoodsDel();
 void InitFace();
 void GoodsDemand();
-void GoodsDerive();
+void GoodsDerive(struct Goods *tou);
 void EnterPassword();
 void EnterFace();
 
@@ -44,6 +44,7 @@ void GoodsAdd()
 {
 	char ichoose;
 	struct Goods *p;
+	struct Goods *pp;
 	p=(struct Goods *)malloc(sizeof(struct Goods));//对链表进行内存空间申请
 	if(p==NULL)
 	{
@@ -77,9 +78,12 @@ void GoodsAdd()
 	}
 	else if(ichoose=='N'||ichoose=='n')
 	{
-		;
+		for(pp=head;pp!=NULL;pp=pp->next)
+	{
+		printf("\t\t%s\t\t%ld\t\t%d\n",pp->GoodsName,pp->GoodsNum,pp->GoodsPrice);
 	}
-	GoodsDerive();
+		GoodsDerive(head);
+	}
 	
 }
 
@@ -234,7 +238,7 @@ void GoodsDemand()
 {
 	struct Goods *node;
 	node=ReadfromFile();
-	system("cls");
+	//system("cls");
 	printf("\t\t*********************************************************\n");
 	printf("\t\t*\t\t\t\t\t\t\t*\n");
 	printf("\t\t*\t\t\t购物车信息查询\t\t\t*\n");
@@ -248,25 +252,32 @@ void GoodsDemand()
 	do
 	{
 		printf("\t\t%s\t\t%ld\t\t%d\n",node->GoodsName,node->GoodsNum,node->GoodsPrice);
+		node=node->next;
 	}while(node!=NULL);
 }
 
 //商品信息导出到文件
-void GoodsDerive()
+void GoodsDerive(struct Goods *tou)
 {
-	struct Goods *p=head;
+	struct Goods *p=tou;
 	//char a[10]={"商品名称"},b[10]={"商品个数"},c[10]={"商品价格"},e[10]={"     "};
 	FILE *fp;
-	fp=fopen("商品信息.txt","wb");
+	fp=fopen("商品信息.txt","ab");
 	if(fp==NULL)
 	{
 		printf("请检查当前目录是否具有写入%s的功能","商品信息.txt");
 	}
 	//fprintf(fp,"%s\t\t\t%s\t\t\t%s\n",a,b,c);
-		for(p=head;p!=NULL;p=p->next)
+	while(p!=NULL)
+	{
+		if(fwrite(p,LEN,1,fp)!=1)
 		{
-			fprintf(fp,"%s\t\t\t%ld\t\t\t%d\n",p->GoodsName,p->GoodsNum,p->GoodsPrice);
+			printf("写入数据错误\n");
+			fclose(fp);
+			return;
 		}
+		p=p->next;
+	}
 	fclose(fp);
 	printf("\t\t*********************************************************\n");
 	printf("\t\t*\t\t\t\t\t\t\t*\n");
@@ -366,7 +377,7 @@ void EnterFace()
 		else if(a==5)
 		{
 			system("cls");
-			GoodsDerive();
+			GoodsDerive(head);
 			printf("\t\t");
 			system("pause");
 			system("cls");
@@ -382,8 +393,7 @@ void EnterFace()
 struct Goods *ReadfromFile(void)
 {
 	FILE *fp;
-	struct Goods *head=NULL;
-	char GoodsName1[10];
+	struct Goods *tou=NULL;
 	struct Goods *p1;
 	struct Goods *p2;
 	if((fp=fopen("商品信息.txt","rb+"))==NULL)
@@ -402,13 +412,19 @@ struct Goods *ReadfromFile(void)
 			free(p1);
 			break;
 		}
-		if(head==NULL)
-			head=p2=p1;
+		if(tou==NULL)
+			tou=p2=p1;
 		else{
 			p2->next=p1;
 			p2=p1;
 		}
 	}
+	/*while(!feof(fp))
+	{
+		p1=head;
+		fread(p1,LEN,1,fp);
+		p2=p1->next;
+	}*/
 	fclose(fp);
-	return (head);
+	return (tou);
 }
