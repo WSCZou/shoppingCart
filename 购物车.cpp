@@ -19,7 +19,7 @@ struct Goods
 	int GoodsPrice;
 	struct Goods *next;
 };
-struct Goods *head,*tail;
+struct Goods *headadd,*tailadd;
 struct Goods *ReadfromFile(void);
 void GoodsAdd();
 struct Goods *GoodsAlter();
@@ -28,12 +28,13 @@ struct Goods *GoodsDel();
 void InitFace();
 void GoodsDemand();
 void GoodsDerive(struct Goods *tou);
+void GoodsDerive_wb(struct Goods *tou);
 void EnterPassword();
 void EnterFace();
 
 void main(int argc, char* argv[])
 {
-	head=tail=NULL;
+	headadd=tailadd=NULL;
 	system("color 1f");
 	EnterPassword();
 	InitFace();
@@ -42,6 +43,7 @@ void main(int argc, char* argv[])
 //商品信息录入
 void GoodsAdd()
 {
+	
 	char ichoose;
 	struct Goods *p;
 	struct Goods *pp;
@@ -57,16 +59,16 @@ void GoodsAdd()
 	scanf("%s",&p->GoodsName);
 	printf("\t\t请输入商品价格:");
 	scanf("%d",&p->GoodsPrice);
-	if(head==NULL)//如果链表为空，则head为头结点
+	if(headadd==NULL)//如果链表为空，则head为头结点
 	{
-		head=tail=p;
-		tail->next=NULL;
+		headadd=tailadd=p;
+		tailadd->next=NULL;
 	}
 	else
 	{
-		tail->next=p;
-		tail=p;
-		tail->next=NULL;
+		tailadd->next=p;
+		tailadd=p;
+		tailadd->next=NULL;
 	}
 	printf("\t\t添加商品信息成功!\n");
 	printf("\t\t是否继续(Y\\N)!");
@@ -78,11 +80,11 @@ void GoodsAdd()
 	}
 	else if(ichoose=='N'||ichoose=='n')
 	{
-		for(pp=head;pp!=NULL;pp=pp->next)
+		for(pp=headadd;pp!=NULL;pp=pp->next)
 	{
 		printf("\t\t%s\t\t%ld\t\t%d\n",pp->GoodsName,pp->GoodsNum,pp->GoodsPrice);
 	}
-		GoodsDerive(head);
+		GoodsDerive(headadd);
 	}
 	
 }
@@ -90,18 +92,19 @@ void GoodsAdd()
 //商品信息修改
 struct Goods *GoodsAlter()
 {
+	headadd=ReadfromFile();
 	char AlterName[10];
 	struct Goods *pp;
 	struct Goods *p;
-	p=head;
-	for(pp=head;pp!=NULL;pp=pp->next)
+	p=headadd;
+	for(pp=headadd;pp!=NULL;pp=pp->next)
 	{
 		printf("\t\t%s\t\t%ld\t\t%d\n",pp->GoodsName,pp->GoodsNum,pp->GoodsPrice);
 	}
-	if(head==NULL)
+	if(headadd==NULL)
 	{
 		printf("\t\t购物车为空!\n");
-		return(head);
+		return(headadd);
 	}
 	printf("\t\t请输入要修改的商品的名字:");
 	scanf("%s",&AlterName);
@@ -118,6 +121,7 @@ struct Goods *GoodsAlter()
 		printf("\t\t输入数量:");
 		scanf("%ld",&p->GoodsNum);
 		printf("修改成功!");
+		GoodsDerive_wb(headadd);
 	}
 	else
 	{
@@ -196,19 +200,20 @@ void EnterPassword()
 //商品删除
 struct Goods *GoodsDel()
 {
+	headadd=ReadfromFile();
 	char DelName;
-	struct Goods *p=head,*pr=head,*pp;
-	for(pp=head;pp!=NULL;pp=pp->next)
+	struct Goods *p=headadd,*pr=headadd,*pp;
+	for(pp=headadd;pp!=NULL;pp=pp->next)
 	{
 		printf("\t\t%s\t\t%ld\t\t%d\n",pp->GoodsName,pp->GoodsNum,pp->GoodsPrice);
 	}
-	if(head==NULL)
+	if(headadd==NULL)
 	{
 		printf("\t\t无可删除商品\n");
-		return(head);
+		return(headadd);
 	}
 	printf("\t\t请输入要删除的商品名称:");
-	scanf("%s",DelName);
+	scanf("%s",&DelName);
 	while(strcmp(&DelName,p->GoodsName)!=0&&p->next!=NULL)
 	{
 		pr=p;
@@ -216,15 +221,17 @@ struct Goods *GoodsDel()
 	}
 	if(strcmp(&DelName,p->GoodsName)==0)
 	{
-		if(p==head)
+		if(p==headadd)
 		{
-			head=p->next;
+			headadd=p->next;
 			printf("\t\t删除成功\n");
+			GoodsDerive_wb(headadd);
 		}
 		else
 		{
 			pr->next=p->next;
 			printf("删除成功!\n");
+			GoodsDerive_wb(headadd);
 		}
 		free(p);
 	}
@@ -238,6 +245,7 @@ void GoodsDemand()
 {
 	struct Goods *node;
 	node=ReadfromFile();
+	
 	//system("cls");
 	printf("\t\t*********************************************************\n");
 	printf("\t\t*\t\t\t\t\t\t\t*\n");
@@ -263,6 +271,37 @@ void GoodsDerive(struct Goods *tou)
 	//char a[10]={"商品名称"},b[10]={"商品个数"},c[10]={"商品价格"},e[10]={"     "};
 	FILE *fp;
 	fp=fopen("商品信息.txt","ab");
+	if(fp==NULL)
+	{
+		printf("请检查当前目录是否具有写入%s的功能","商品信息.txt");
+	}
+	//fprintf(fp,"%s\t\t\t%s\t\t\t%s\n",a,b,c);
+	while(p!=NULL)
+	{
+		if(fwrite(p,LEN,1,fp)!=1)
+		{
+			printf("写入数据错误\n");
+			fclose(fp);
+			return;
+		}
+		p=p->next;
+	}
+	fclose(fp);
+	printf("\t\t*********************************************************\n");
+	printf("\t\t*\t\t\t\t\t\t\t*\n");
+	printf("\t\t*\t\t\t商品信息导出\t\t\t*\n");
+	printf("\t\t*\t\t\t\t\t\t\t*\n");
+	printf("\t\t*********************************************************\n");
+	printf("\t\t*\t\t\t\t\t\t\t*\n");
+	printf("\t\t*\t\t\t\t\t\t\t*\n");
+	printf("\t\t成功将数据保存到%s文件中\n","商品信息.txt");
+}
+void GoodsDerive_wb(struct Goods *tou)
+{
+	struct Goods *p=tou;
+	//char a[10]={"商品名称"},b[10]={"商品个数"},c[10]={"商品价格"},e[10]={"     "};
+	FILE *fp;
+	fp=fopen("商品信息.txt","wb");
 	if(fp==NULL)
 	{
 		printf("请检查当前目录是否具有写入%s的功能","商品信息.txt");
@@ -374,14 +413,14 @@ void EnterFace()
 			system("pause");
 			system("cls");
 		}
-		else if(a==5)
+		/*else if(a==5)
 		{
 			system("cls");
 			GoodsDerive(head);
 			printf("\t\t");
 			system("pause");
 			system("cls");
-		}
+		}*/
 		else if(a==6)
 		{
 			printf("\t\t");
